@@ -1,0 +1,48 @@
+[package]
+name = "ternyte"
+version = "0.1.0"
+edition = "2024"
+
+[profile.dev]
+opt-level = 0
+debug = true
+incremental = true
+
+[profile.dev.package."*"]
+opt-level = 0
+
+[profile.release]
+# Performance
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+
+# Smaller binary
+strip = true
+debug = false
+panic = "abort"
+
+[dependencies]
+hecs = "0.11.0"
+sdl3-sys = {
+    version = "0.6.5",
+    features = [
+        "build-from-source", 
+        "link-static",
+        "sdl-lean-and-mean",
+        "no-default-subsystems",
+        "sdl-video",
+        "sdl-render",
+    ]
+}
+sdl3-ttf-sys = {
+    version = "0.6.0",
+    features = [
+        "build-static-vendored",
+    ]
+}
+
+[lints.clippy]
+needless_return = "allow"
+single_match = "allow"
+upper_case_acronyms = "allow"
