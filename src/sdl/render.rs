@@ -82,4 +82,23 @@ impl Render {
             SDL_RenderRect(self.renderer, &rect);
         }
     }
+
+    pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32) {
+        let camera = unsafe { &*self.camera };
+
+        let (x1, x2, y1, y2) = if camera.active {
+            (
+                (x1 - camera.x) * camera.zoom,
+                (x2 - camera.x) * camera.zoom,
+                (y1 - camera.y) * camera.zoom,
+                (y2 - camera.y) * camera.zoom,
+            )
+        } else {
+            (x1, x2, y1, y2)
+        };
+
+        unsafe {
+            SDL_RenderLine(self.renderer, x1, y1, x2, y2);
+        }
+    }
 }

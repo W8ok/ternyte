@@ -12,13 +12,10 @@ incremental = true
 opt-level = 0
 
 [profile.release]
-# Performance
 opt-level = 3
 codegen-units = 1
 lto = "fat"
-
-# Smaller binary
-strip = true
+strip = "symbols" 
 debug = false
 panic = "abort"
 

@@ -1,5 +1,6 @@
 #![allow(dead_code, unused)]
 use sdl3_sys::everything::*;
+use sdl3_ttf_sys::everything::*;
 use std::{ffi::CString, ptr};
 
 pub mod types;
@@ -43,6 +44,7 @@ impl Sdl {
                 &mut window,
                 &mut renderer,
             );
+            SDL_SetRenderVSync(renderer, -1);
         }
 
         let mut camera = Box::new(Camera::new(0., 0., 1.));
@@ -66,6 +68,7 @@ impl Sdl {
 
     pub fn exit(&mut self) {
         unsafe {
+            TTF_Quit();
             SDL_Quit();
         }
     }

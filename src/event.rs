@@ -26,6 +26,18 @@ pub fn handle(sdl: &mut Sdl) -> bool {
                 const ZOOM_SPEED: f32 = 0.1;
                 sdl.camera.zoom_towards(x, y, wheel * ZOOM_SPEED);
             }
+            Event::KeyDown { key } => {
+                KEYS.with(|k| {
+                    if !k.borrow().contains(&key) {
+                        k.borrow_mut().push(key);
+                    }
+                });
+            }
+            Event::KeyUp { key } => {
+                KEYS.with(|k| {
+                    k.borrow_mut().retain(|k| *k != key);
+                });
+            }
             _ => {}
         }
     }
