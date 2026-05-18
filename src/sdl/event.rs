@@ -101,6 +101,7 @@ impl From<u8> for MouseButton {
 
 #[derive(PartialEq)]
 pub enum Key {
+    Shift,
     Space,
     Escape,
     A,
@@ -149,6 +150,7 @@ pub enum Key {
 impl From<SDL_Keycode> for Key {
     fn from(keycode: SDL_Keycode) -> Self {
         match keycode {
+            SDLK_LSHIFT | SDLK_RSHIFT => Key::Shift,
             SDLK_SPACE => Key::Space,
             SDLK_ESCAPE => Key::Escape,
 
