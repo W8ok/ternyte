@@ -1,3 +1,4 @@
+use crate::components::base::*;
 use crate::input::*;
 use crate::sdl::{Sdl, event::*, types::*};
 

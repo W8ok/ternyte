@@ -6,6 +6,12 @@ pub struct Rect {
     pub h: f32,
 }
 
+impl Rect {
+    pub fn contains(&self, x: f32, y: f32) -> bool {
+        x >= self.x && x <= self.x + self.w && y >= self.y && y <= self.y + self.h
+    }
+}
+
 #[derive(Default)]
 pub struct Color {
     pub r: u8,

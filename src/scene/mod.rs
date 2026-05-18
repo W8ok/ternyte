@@ -1,40 +1,44 @@
-use crate::sdl::{Sdl, types::*};
-use crate::ui::{button::ButtonAction, *};
-mod editor;
-mod main_menu;
+use crate::input;
+use crate::sdl::{
+    Sdl,
+    event::{Key, MouseButton},
+    types::*,
+};
+use hecs::World;
 
+pub mod editor;
+pub mod menu;
+
+#[derive(Clone, Copy)]
 pub enum SceneSelect {
     MainMenu,
     Editor,
 }
 
-pub struct Scene {
-    current: SceneSelect,
-    scenes: Vec<SceneSelect>,
-}
+pub fn manager(sdl: &mut Sdl, world: &mut World) -> bool {
+    let scene = world.query::<&SceneSelect>().iter().next().cloned();
 
-impl Scene {
-    pub fn new(current: SceneSelect) -> Self {
-        Self {
-            current,
-            scenes: Vec::new(),
+    match scene {
+        Some(SceneSelect::Editor) => {
+            if !editor::interact(sdl, world) {
+                return false;
+            }
+
+            editor::hover(world);
+            editor::click(world);
+            editor::render(sdl, world);
         }
-    }
+        Some(SceneSelect::MainMenu) => {
+            if !menu::interact(world) {
+                return false;
+            }
 
-    pub fn interract(&self, sdl: &mut Sdl, ui: &mut Ui) -> bool {
-        return match self.current {
-            SceneSelect::Editor => editor::interract(sdl, ui),
-            SceneSelect::MainMenu => main_menu::interract(ui),
-        };
-    }
-
-    pub fn render(&self, sdl: &mut Sdl, ui: &mut Ui) {
-        match self.current {
-            SceneSelect::Editor => editor::render(sdl),
-            SceneSelect::MainMenu => main_menu::render(sdl),
+            menu::hover(world);
+            menu::click(world);
+            menu::render(sdl, world);
         }
-        ui.render(sdl);
+        None => {}
     }
 
-    pub fn create_new_scene(scene: SceneSelect) {}
+    return true;
 }

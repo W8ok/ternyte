@@ -1,4 +1,5 @@
 // src/input.rs
+use crate::components::base::*;
 use crate::sdl::event::{Key, MouseButton};
 use std::cell::RefCell;
 
@@ -17,6 +18,8 @@ pub fn mouse_pressed(button: MouseButton) -> bool {
     MOUSE_BUTTONS.with(|b| b.borrow().contains(&button))
 }
 
-pub fn mouse_pos() -> (f32, f32) {
-    (MOUSE_X.with(|x| *x.borrow()), MOUSE_Y.with(|y| *y.borrow()))
+pub fn mouse_pos() -> Position {
+    let x = MOUSE_X.with(|x| *x.borrow());
+    let y = MOUSE_Y.with(|y| *y.borrow());
+    Position { x, y }
 }
