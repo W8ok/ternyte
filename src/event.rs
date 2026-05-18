@@ -1,12 +1,18 @@
+use hecs::*;
+
 use crate::components::base::*;
 use crate::input::*;
+use crate::scene;
 use crate::sdl::{Sdl, event::*, types::*};
 
-pub fn handle(sdl: &mut Sdl) -> bool {
+pub fn handle(sdl: &mut Sdl, world: &mut World) -> bool {
     let events = sdl.event.poll();
     for event in events {
         match event {
             Event::Quit => return false,
+            Event::WindowResize { width, height } => {
+                scene::builder(sdl, world);
+            }
             Event::MouseMotion { x, y } => {
                 MOUSE_X.with(|mx| *mx.borrow_mut() = x);
                 MOUSE_Y.with(|my| *my.borrow_mut() = y);

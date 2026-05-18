@@ -16,14 +16,14 @@ mod input;
 
 fn main() {
     let mut sdl = Sdl::new("goob", 1280, 720);
+    sdl.text.load("assets/font.ttf");
+
     let mut world = World::new();
     world.spawn((SceneSelect::Editor, Resource));
-
-    sdl.text.load("assets/font.ttf");
-    scene::editor::new(&mut world);
+    scene::builder(&mut sdl, &mut world);
 
     'main: loop {
-        if !event::handle(&mut sdl) {
+        if !event::handle(&mut sdl, &mut world) {
             break 'main;
         }
 

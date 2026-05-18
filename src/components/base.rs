@@ -5,4 +5,4 @@ pub struct Position {
 }
 
 pub struct Resource;
-pub struct Text(pub String);
+pub struct Text(pub &'static str);

@@ -26,6 +26,7 @@ impl SdlEvent {
 
 pub enum Event {
     Quit,
+    WindowResize { width: i32, height: i32 },
     MouseWheel { x: f32, y: f32, wheel: f32 },
     MouseMotion { x: f32, y: f32 },
     MouseButtonDown { x: f32, y: f32, button: MouseButton },
@@ -38,6 +39,12 @@ impl Event {
     fn from_sdl_event(event: SDL_Event) -> Option<Self> {
         match unsafe { event.event_type() } {
             SDL_EVENT_QUIT => Some(Event::Quit),
+            SDL_EVENT_WINDOW_RESIZED => unsafe {
+                Some(Event::WindowResize {
+                    width: event.window.data1,
+                    height: event.window.data2,
+                })
+            },
             SDL_EVENT_MOUSE_WHEEL => unsafe {
                 Some(Event::MouseWheel {
                     x: event.wheel.mouse_x,

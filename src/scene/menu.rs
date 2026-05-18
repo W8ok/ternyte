@@ -94,6 +94,6 @@ pub fn render(sdl: &mut Sdl, world: &World) {
         const PADDING: f32 = 10.0;
         sdl.text.size(rect.h - PADDING * 4.);
         sdl.text
-            .render(&text.0, rect.x + PADDING, rect.y + PADDING * 2.);
+            .render(text.0, rect.x + PADDING, rect.y + PADDING * 2.);
     }
 }

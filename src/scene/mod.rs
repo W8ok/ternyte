@@ -1,10 +1,11 @@
+use crate::components::{base::*, ui::*};
 use crate::input;
 use crate::sdl::{
     Sdl,
     event::{Key, MouseButton},
     types::*,
 };
-use hecs::World;
+use hecs::*;
 
 pub mod editor;
 pub mod menu;
@@ -41,4 +42,14 @@ pub fn manager(sdl: &mut Sdl, world: &mut World) -> bool {
     }
 
     return true;
+}
+
+pub fn builder(sdl: &mut Sdl, world: &mut World) {
+    let to_despawn: Vec<Entity> = world.query::<(Entity)>().with::<&Ui>().iter().collect();
+
+    for entity in to_despawn {
+        world.despawn(entity);
+    }
+
+    editor::new(sdl, world);
 }

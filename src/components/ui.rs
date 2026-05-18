@@ -1,5 +1,6 @@
 pub use crate::sdl::types::*;
 
+pub struct Ui;
 pub struct Editor;
 pub struct Menu;
 

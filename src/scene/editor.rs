@@ -9,19 +9,21 @@ use crate::{
 };
 use hecs::*;
 
-pub fn new(world: &mut World) {
+pub fn new(sdl: &mut Sdl, world: &mut World) {
+    let (width, height) = sdl.get_window_size();
     world.spawn((
         Button,
         Rect {
             x: 20.,
-            y: 625.,
+            y: height as f32 - 95.,
             w: 200.,
             h: 75.,
         },
         ButtonAction::Exit,
         Color::DARKGRAY,
+        Text("Exit"),
         Editor,
-        Text("Exit".to_string()),
+        Ui,
     ));
 }
 
@@ -199,6 +201,6 @@ pub fn render(sdl: &mut Sdl, world: &World) {
         const PADDING: f32 = 10.0;
         sdl.text.size(rect.h - PADDING * 4.);
         sdl.text
-            .render(&text.0, rect.x + PADDING, rect.y + PADDING * 2.);
+            .render(text.0, rect.x + PADDING, rect.y + PADDING * 2.);
     }
 }

@@ -40,7 +40,7 @@ impl Sdl {
                 name.as_ptr(),
                 size_x,
                 size_y,
-                SDL_WindowFlags(0),
+                SDL_WINDOW_RESIZABLE,
                 &mut window,
                 &mut renderer,
             );
