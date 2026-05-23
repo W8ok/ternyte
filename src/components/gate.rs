@@ -1,3 +1,5 @@
+use super::base::*;
+
 pub enum GateType {
     AND,
     OR,
@@ -9,3 +11,4 @@ pub enum GateType {
     BUF,
 }
 pub struct Placed;
+pub struct InputPoints(pub Vec<Position>);

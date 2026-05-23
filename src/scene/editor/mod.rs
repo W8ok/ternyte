@@ -98,6 +98,7 @@ fn camera_movement(camera: &mut Camera) {
     }
 }
 
+#[rustfmt::skip]
 pub fn interact(sdl: &mut Sdl, world: &mut World) -> bool {
     camera_movement(&mut sdl.camera);
 
@@ -106,20 +107,20 @@ pub fn interact(sdl: &mut Sdl, world: &mut World) -> bool {
         .with::<(&Button, &Interacted, &Editor)>()
         .into_iter()
         .next()
-        .map(|(entity, action)| (entity, *action));
+        .map(|(button, action)| (button, *action));
 
-    if let Some((entity, action)) = result {
-        world.remove_one::<Interacted>(entity).unwrap();
+    if let Some((button, action)) = result {
+        world.remove_one::<Interacted>(button).unwrap();
         match action {
             ButtonAction::Exit => return false,
-            ButtonAction::AddGateAND => placables::add_gate(GateType::AND, 2, world),
-            ButtonAction::AddGateOR => placables::add_gate(GateType::OR, 2, world),
-            ButtonAction::AddGateXOR => placables::add_gate(GateType::XOR, 2, world),
-            ButtonAction::AddGateNOT => placables::add_gate(GateType::NOT, 1, world),
-            ButtonAction::AddGateNAND => placables::add_gate(GateType::NAND, 2, world),
-            ButtonAction::AddGateNOR => placables::add_gate(GateType::NOR, 2, world),
-            ButtonAction::AddGateXNOR => placables::add_gate(GateType::XNOR, 2, world),
-            ButtonAction::AddGateBUF => placables::add_gate(GateType::BUF, 1, world),
+            ButtonAction::AddGateAND => placables::add_gate(GateType::AND, 2, Text("AND"), world),
+            ButtonAction::AddGateOR => placables::add_gate(GateType::OR, 2, Text("OR"), world),
+            ButtonAction::AddGateXOR => placables::add_gate(GateType::XOR, 2, Text("XOR"), world),
+            ButtonAction::AddGateNOT => placables::add_gate(GateType::NOT, 1, Text("NOT"), world),
+            ButtonAction::AddGateNAND => placables::add_gate(GateType::NAND, 2, Text("NAND"), world),
+            ButtonAction::AddGateNOR => placables::add_gate(GateType::NOR, 2, Text("NOR"), world),
+            ButtonAction::AddGateXNOR => placables::add_gate(GateType::XNOR, 2, Text("XNOR"), world),
+            ButtonAction::AddGateBUF => placables::add_gate(GateType::BUF, 1, Text("BUF"), world),
         }
     }
 
