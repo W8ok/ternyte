@@ -8,3 +8,4 @@ pub enum GateType {
     XNOR,
     BUF,
 }
+pub struct Placed;

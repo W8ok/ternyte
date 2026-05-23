@@ -25,6 +25,7 @@ pub fn manager(sdl: &mut Sdl, world: &mut World) -> bool {
                 return false;
             }
 
+            editor::placement(world);
             editor::hover(world);
             editor::click(world);
             editor::render(sdl, world);

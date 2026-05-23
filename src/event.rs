@@ -16,6 +16,10 @@ pub fn handle(sdl: &mut Sdl, world: &mut World) -> bool {
             Event::MouseMotion { x, y } => {
                 MOUSE_X.with(|mx| *mx.borrow_mut() = x);
                 MOUSE_Y.with(|my| *my.borrow_mut() = y);
+
+                let (x, y) = sdl.camera.screen_to_world(x, y);
+                MOUSE_X_CAM.with(|mx| *mx.borrow_mut() = x);
+                MOUSE_Y_CAM.with(|my| *my.borrow_mut() = y);
             }
             Event::MouseButtonDown { x, y, button } => {
                 MOUSE_BUTTONS.with(|b| {

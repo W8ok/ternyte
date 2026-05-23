@@ -9,6 +9,8 @@ use crate::{
 };
 use hecs::*;
 
+mod placables;
+
 pub fn new(sdl: &mut Sdl, world: &mut World) {
     let (width, height) = sdl.get_window_size();
 
@@ -53,6 +55,10 @@ pub fn new(sdl: &mut Sdl, world: &mut World) {
         Editor,
         Ui,
     ));
+}
+
+pub fn placement(world: &mut World) {
+    placables::place_gate(world);
 }
 
 fn camera_movement(camera: &mut Camera) {
@@ -106,8 +112,14 @@ pub fn interact(sdl: &mut Sdl, world: &mut World) -> bool {
         world.remove_one::<Interacted>(entity).unwrap();
         match action {
             ButtonAction::Exit => return false,
-            ButtonAction::AddGateAND => return false,
-            _ => {}
+            ButtonAction::AddGateAND => placables::add_gate(GateType::AND, 2, world),
+            ButtonAction::AddGateOR => placables::add_gate(GateType::OR, 2, world),
+            ButtonAction::AddGateXOR => placables::add_gate(GateType::XOR, 2, world),
+            ButtonAction::AddGateNOT => placables::add_gate(GateType::NOT, 1, world),
+            ButtonAction::AddGateNAND => placables::add_gate(GateType::NAND, 2, world),
+            ButtonAction::AddGateNOR => placables::add_gate(GateType::NOR, 2, world),
+            ButtonAction::AddGateXNOR => placables::add_gate(GateType::XNOR, 2, world),
+            ButtonAction::AddGateBUF => placables::add_gate(GateType::BUF, 1, world),
         }
     }
 
@@ -148,16 +160,12 @@ pub fn click(world: &mut World) {
     } else if unsafe { CLICKED } {
         unsafe { CLICKED = false };
 
-        let mut to_interact = Vec::new();
-        for (entity, button) in world
+        let to_interact: Vec<Entity> = world
             .query::<(Entity, &Rect)>()
             .with::<(&Button, &Editor)>()
             .into_iter()
-        {
-            if button.contains(pos.x, pos.y) {
-                to_interact.push(entity);
-            }
-        }
+            .filter_map(|(entity, button)| button.contains(pos.x, pos.y).then_some(entity))
+            .collect();
 
         for entity in to_interact {
             world.insert(entity, (Interacted,)).unwrap();
@@ -171,14 +179,13 @@ fn grid(sdl: &mut Sdl) {
     let (w, h) = sdl.get_window_size();
     let camera = &sdl.camera;
 
-    let spacing = 16.0;
-
     let left = camera.x;
     let top = camera.y;
     let right = left + w as f32 / camera.zoom;
     let bottom = top + h as f32 / camera.zoom;
 
     // I have no real idea wtf this does... :3
+    let spacing = placables::GRID_SIZE;
     let snap = |v: f32| (v / spacing).floor() * spacing;
 
     let mut x = snap(left);
@@ -194,10 +201,11 @@ fn grid(sdl: &mut Sdl) {
     }
 }
 
-pub fn render(sdl: &mut Sdl, world: &World) {
+pub fn render(sdl: &mut Sdl, world: &mut World) {
     sdl.camera.start();
     {
         grid(sdl);
+        placables::render(sdl, world);
     }
     sdl.camera.end();
 

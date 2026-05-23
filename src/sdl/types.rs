@@ -93,4 +93,128 @@ impl Color {
         b: 0,
         a: 0,
     };
+    pub const DARKRED: Self = Self {
+        r: 139,
+        g: 0,
+        b: 0,
+        a: 255,
+    };
+    pub const DARKGREEN: Self = Self {
+        r: 0,
+        g: 100,
+        b: 0,
+        a: 255,
+    };
+    pub const DARKBLUE: Self = Self {
+        r: 0,
+        g: 0,
+        b: 139,
+        a: 255,
+    };
+
+    pub const LIGHTRED: Self = Self {
+        r: 255,
+        g: 100,
+        b: 100,
+        a: 255,
+    };
+    pub const LIGHTGREEN: Self = Self {
+        r: 144,
+        g: 238,
+        b: 144,
+        a: 255,
+    };
+    pub const LIGHTBLUE: Self = Self {
+        r: 173,
+        g: 216,
+        b: 230,
+        a: 255,
+    };
+
+    pub const ORANGE: Self = Self {
+        r: 255,
+        g: 165,
+        b: 0,
+        a: 255,
+    };
+    pub const PURPLE: Self = Self {
+        r: 128,
+        g: 0,
+        b: 128,
+        a: 255,
+    };
+    pub const PINK: Self = Self {
+        r: 255,
+        g: 105,
+        b: 180,
+        a: 255,
+    };
+    pub const BROWN: Self = Self {
+        r: 139,
+        g: 69,
+        b: 19,
+        a: 255,
+    };
+
+    pub const GOLD: Self = Self {
+        r: 255,
+        g: 215,
+        b: 0,
+        a: 255,
+    };
+    pub const SILVER: Self = Self {
+        r: 192,
+        g: 192,
+        b: 192,
+        a: 255,
+    };
+    pub const BRONZE: Self = Self {
+        r: 205,
+        g: 127,
+        b: 50,
+        a: 255,
+    };
+
+    pub const TEAL: Self = Self {
+        r: 0,
+        g: 128,
+        b: 128,
+        a: 255,
+    };
+    pub const LIME: Self = Self {
+        r: 50,
+        g: 255,
+        b: 50,
+        a: 255,
+    };
+    pub const NAVY: Self = Self {
+        r: 0,
+        g: 0,
+        b: 80,
+        a: 255,
+    };
+    pub const MAROON: Self = Self {
+        r: 128,
+        g: 0,
+        b: 0,
+        a: 255,
+    };
+    pub const OLIVE: Self = Self {
+        r: 128,
+        g: 128,
+        b: 0,
+        a: 255,
+    };
+    pub const CORAL: Self = Self {
+        r: 255,
+        g: 127,
+        b: 80,
+        a: 255,
+    };
+    pub const INDIGO: Self = Self {
+        r: 75,
+        g: 0,
+        b: 130,
+        a: 255,
+    };
 }

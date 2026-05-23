@@ -77,16 +77,12 @@ pub fn click(world: &mut World) {
         let pos = input::mouse_pos();
         unsafe { CLICKED = false };
 
-        let mut to_interact = Vec::new();
-        for (entity, button) in world
+        let to_interact: Vec<Entity> = world
             .query::<(Entity, &Rect)>()
             .with::<(&Button, &Menu)>()
             .into_iter()
-        {
-            if button.contains(pos.x, pos.y) {
-                to_interact.push(entity);
-            }
-        }
+            .filter_map(|(entity, button)| button.contains(pos.x, pos.y).then_some(entity))
+            .collect();
 
         for entity in to_interact {
             world.insert(entity, (Interacted,)).unwrap();
@@ -96,7 +92,6 @@ pub fn click(world: &mut World) {
 
 pub fn render(sdl: &mut Sdl, world: &World) {
     let (w, h) = sdl.get_window_size();
-
     sdl.text.color(Color::WHITE);
 
     for (rect, color, text) in world
