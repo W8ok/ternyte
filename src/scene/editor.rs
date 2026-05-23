@@ -1,5 +1,5 @@
 use crate::{
-    components::{base::*, ui::*},
+    components::{base::*, gate::*, ui::*},
     input,
     sdl::{
         Sdl,
@@ -11,6 +11,34 @@ use hecs::*;
 
 pub fn new(sdl: &mut Sdl, world: &mut World) {
     let (width, height) = sdl.get_window_size();
+
+    const GATES: [(GateType, &str, ButtonAction); 8] = [
+        (GateType::AND, "AND", ButtonAction::AddGateAND),
+        (GateType::OR, "OR", ButtonAction::AddGateOR),
+        (GateType::XOR, "XOR", ButtonAction::AddGateXOR),
+        (GateType::NOT, "NOT", ButtonAction::AddGateNOT),
+        (GateType::NAND, "NAND", ButtonAction::AddGateNAND),
+        (GateType::NOR, "NOR", ButtonAction::AddGateNOR),
+        (GateType::XNOR, "XNOR", ButtonAction::AddGateXNOR),
+        (GateType::BUF, "BUF", ButtonAction::AddGateBUF),
+    ];
+    for (n, (gate_type, label, action)) in GATES.iter().enumerate() {
+        world.spawn((
+            Button,
+            Rect {
+                x: 20.,
+                y: 20. + 95. * n as f32,
+                w: 200.,
+                h: 75.,
+            },
+            *action,
+            Color::DARKGRAY,
+            Text(label),
+            Editor,
+            Ui,
+        ));
+    }
+
     world.spawn((
         Button,
         Rect {
@@ -78,6 +106,7 @@ pub fn interact(sdl: &mut Sdl, world: &mut World) -> bool {
         world.remove_one::<Interacted>(entity).unwrap();
         match action {
             ButtonAction::Exit => return false,
+            ButtonAction::AddGateAND => return false,
             _ => {}
         }
     }
@@ -103,8 +132,8 @@ pub fn hover(world: &mut World) {
 
 pub fn click(world: &mut World) {
     static mut CLICKED: bool = false;
+    let pos = input::mouse_pos();
     if input::mouse_pressed(MouseButton::Left) {
-        let pos = input::mouse_pos();
         unsafe { CLICKED = true };
 
         for (color, button) in world
@@ -117,7 +146,6 @@ pub fn click(world: &mut World) {
             }
         }
     } else if unsafe { CLICKED } {
-        let pos = input::mouse_pos();
         unsafe { CLICKED = false };
 
         let mut to_interact = Vec::new();

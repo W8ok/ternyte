@@ -5,6 +5,24 @@ use crate::{
 };
 use hecs::*;
 
+pub fn new(sdl: &mut Sdl, world: &mut World) {
+    let (width, height) = sdl.get_window_size();
+    world.spawn((
+        Button,
+        Rect {
+            x: 20.,
+            y: height as f32 - 95.,
+            w: 200.,
+            h: 75.,
+        },
+        ButtonAction::Exit,
+        Color::DARKGRAY,
+        Text("Exit"),
+        Menu,
+        Ui,
+    ));
+}
+
 pub fn interact(world: &mut World) -> bool {
     let result = world
         .query::<(Entity, &ButtonAction)>()

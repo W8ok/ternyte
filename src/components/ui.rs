@@ -1,3 +1,4 @@
+pub use super::gate;
 pub use crate::sdl::types::*;
 
 pub struct Ui;
@@ -10,4 +11,12 @@ pub struct Interacted;
 #[derive(Clone, Copy)]
 pub enum ButtonAction {
     Exit,
+    AddGateAND,
+    AddGateOR,
+    AddGateXOR,
+    AddGateNOT,
+    AddGateNAND,
+    AddGateNOR,
+    AddGateXNOR,
+    AddGateBUF,
 }

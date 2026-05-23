@@ -12,7 +12,7 @@ pub mod menu;
 
 #[derive(Clone, Copy)]
 pub enum SceneSelect {
-    MainMenu,
+    Menu,
     Editor,
 }
 
@@ -29,7 +29,7 @@ pub fn manager(sdl: &mut Sdl, world: &mut World) -> bool {
             editor::click(world);
             editor::render(sdl, world);
         }
-        Some(SceneSelect::MainMenu) => {
+        Some(SceneSelect::Menu) => {
             if !menu::interact(world) {
                 return false;
             }
@@ -52,4 +52,5 @@ pub fn builder(sdl: &mut Sdl, world: &mut World) {
     }
 
     editor::new(sdl, world);
+    menu::new(sdl, world);
 }
