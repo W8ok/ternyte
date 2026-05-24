@@ -19,7 +19,7 @@ fn main() {
     sdl.text.load("assets/font.ttf");
 
     let mut world = World::new();
-    world.spawn((SceneSelect::Editor, Resource));
+    world.spawn((SceneSelect::Editor, Tool::Place, Resource));
     scene::builder(&mut sdl, &mut world);
 
     'main: loop {
@@ -27,7 +27,7 @@ fn main() {
             break 'main;
         }
 
-        sdl.render.clear(Color::BLACK);
+        sdl.render.clear(Color::GRAY);
 
         if !scene::manager(&mut sdl, &mut world) {
             break 'main;

@@ -1,4 +1,5 @@
 use super::base::*;
+use crate::sdl::types::*;
 
 pub enum GateType {
     AND,
@@ -11,4 +12,12 @@ pub enum GateType {
     BUF,
 }
 pub struct Placed;
+pub struct Selected;
 pub struct InputPoints(pub Vec<Position>);
+
+#[derive(Clone)]
+pub struct Moving {
+    pub original_rect: Rect,
+    pub original_points: Vec<Position>,
+    pub offset: Position,
+}

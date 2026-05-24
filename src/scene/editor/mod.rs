@@ -9,7 +9,8 @@ use crate::{
 };
 use hecs::*;
 
-mod placables;
+mod gates;
+pub const GRID_SIZE: f32 = 16.0;
 
 pub fn new(sdl: &mut Sdl, world: &mut World) {
     let (width, height) = sdl.get_window_size();
@@ -57,8 +58,35 @@ pub fn new(sdl: &mut Sdl, world: &mut World) {
     ));
 }
 
+fn get_tool(world: &mut World) -> Tool {
+    let tool = world
+        .query::<Entity>()
+        .with::<(&Tool, &Resource)>()
+        .iter()
+        .next()
+        .unwrap();
+
+    if input::key_pressed(Key::Num1) {
+        *world.get::<&mut Tool>(tool).unwrap() = Tool::Place;
+    } else if input::key_pressed(Key::Num2) {
+        *world.get::<&mut Tool>(tool).unwrap() = Tool::Select;
+    }
+
+    return *world.get::<&Tool>(tool).unwrap();
+}
+
 pub fn placement(world: &mut World) {
-    placables::place_gate(world);
+    let current_tool = get_tool(world);
+
+    match current_tool {
+        Tool::Place => {
+            gates::place_gate(world);
+        }
+        Tool::Select => {
+            gates::select_gate(world);
+        }
+        _ => {}
+    }
 }
 
 fn camera_movement(camera: &mut Camera) {
@@ -111,16 +139,17 @@ pub fn interact(sdl: &mut Sdl, world: &mut World) -> bool {
 
     if let Some((button, action)) = result {
         world.remove_one::<Interacted>(button).unwrap();
+
         match action {
             ButtonAction::Exit => return false,
-            ButtonAction::AddGateAND => placables::add_gate(GateType::AND, 2, Text("AND"), world),
-            ButtonAction::AddGateOR => placables::add_gate(GateType::OR, 2, Text("OR"), world),
-            ButtonAction::AddGateXOR => placables::add_gate(GateType::XOR, 2, Text("XOR"), world),
-            ButtonAction::AddGateNOT => placables::add_gate(GateType::NOT, 1, Text("NOT"), world),
-            ButtonAction::AddGateNAND => placables::add_gate(GateType::NAND, 2, Text("NAND"), world),
-            ButtonAction::AddGateNOR => placables::add_gate(GateType::NOR, 2, Text("NOR"), world),
-            ButtonAction::AddGateXNOR => placables::add_gate(GateType::XNOR, 2, Text("XNOR"), world),
-            ButtonAction::AddGateBUF => placables::add_gate(GateType::BUF, 1, Text("BUF"), world),
+            ButtonAction::AddGateAND => gates::add_gate(GateType::AND, 2, Text("AND"), world),
+            ButtonAction::AddGateOR => gates::add_gate(GateType::OR, 2, Text("OR"), world),
+            ButtonAction::AddGateXOR => gates::add_gate(GateType::XOR, 2, Text("XOR"), world),
+            ButtonAction::AddGateNOT => gates::add_gate(GateType::NOT, 1, Text("NOT"), world),
+            ButtonAction::AddGateNAND => gates::add_gate(GateType::NAND, 2, Text("NAND"), world),
+            ButtonAction::AddGateNOR => gates::add_gate(GateType::NOR, 2, Text("NOR"), world),
+            ButtonAction::AddGateXNOR => gates::add_gate(GateType::XNOR, 2, Text("XNOR"), world),
+            ButtonAction::AddGateBUF => gates::add_gate(GateType::BUF, 1, Text("BUF"), world),
         }
     }
 
@@ -175,7 +204,7 @@ pub fn click(world: &mut World) {
 }
 
 fn grid(sdl: &mut Sdl) {
-    sdl.render.color(&Color::GREEN);
+    sdl.render.color(&Color::DARKGRAY);
 
     let (w, h) = sdl.get_window_size();
     let camera = &sdl.camera;
@@ -186,7 +215,7 @@ fn grid(sdl: &mut Sdl) {
     let bottom = top + h as f32 / camera.zoom;
 
     // I have no real idea wtf this does... :3
-    let spacing = placables::GRID_SIZE;
+    let spacing = GRID_SIZE;
     let snap = |v: f32| (v / spacing).floor() * spacing;
 
     let mut x = snap(left);
@@ -206,7 +235,7 @@ pub fn render(sdl: &mut Sdl, world: &mut World) {
     sdl.camera.start();
     {
         grid(sdl);
-        placables::render(sdl, world);
+        gates::render(sdl, world);
     }
     sdl.camera.end();
 

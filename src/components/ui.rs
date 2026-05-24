@@ -20,3 +20,10 @@ pub enum ButtonAction {
     AddGateXNOR,
     AddGateBUF,
 }
+
+#[derive(Clone, Copy)]
+pub enum Tool {
+    None,
+    Place,
+    Select,
+}
