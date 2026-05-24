@@ -36,18 +36,7 @@ pub fn add_gate(gate_type: GateType, input_count: u8, text: Text, world: &mut Wo
 
     world.spawn((rect, gate_type, InputPoints(input_points), text));
 
-    // Set tool to place and deselect all entities
-    let tool = world
-        .query::<Entity>()
-        .with::<(&Tool, &Resource)>()
-        .iter()
-        .next()
-        .unwrap();
-    *world.get::<&mut Tool>(tool).unwrap() = Tool::Place;
-
-    let selected: Vec<Entity> = world.query::<Entity>().with::<&Selected>().iter().collect();
-
-    for entity in selected {
+    for entity in selected(world) {
         world.remove_one::<Selected>(entity).unwrap();
     }
 }
@@ -86,136 +75,198 @@ pub fn place_gate(world: &mut World) {
     }
 }
 
+// Maybe clean this up?
+#[allow(static_mut_refs)]
 fn move_gates(world: &mut World) {
-    let mut to_move = Vec::new();
-    for entity in world
-        .query::<Entity>()
-        .with::<(&Selected, &Placed, &Rect, &InputPoints)>()
-        .without::<&Moving>()
-        .iter()
-    {
-        to_move.push(entity);
+    struct DragState {
+        clicked: bool,
+        offsets: Vec<Position>,
     }
+    static mut DRAG: DragState = DragState {
+        clicked: false,
+        offsets: Vec::new(),
+    };
 
     let mouse_pos = input::mouse_pos_camera();
-    for entity in to_move {
-        let rect = *world.get::<&Rect>(entity).unwrap();
-        let points = world.get::<&InputPoints>(entity).unwrap().0.clone();
-        let _ = rect; // Makes the borrow checker stfu
 
-        // Rustfmt wtf (╥‸╥)
-        world
-            .insert_one(
-                entity,
-                Moving {
-                    original_rect: rect,
-                    original_points: points,
-                    offset: Position {
+    if input::mouse_pressed(MouseButton::Left) {
+        if unsafe { !DRAG.clicked } {
+            unsafe {
+                DRAG.clicked = true;
+                DRAG.offsets.clear();
+            }
+            for entity in selected(world) {
+                let rect = world.get::<&Rect>(entity).unwrap();
+                unsafe {
+                    DRAG.offsets.push(Position {
                         x: rect.x - mouse_pos.x,
                         y: rect.y - mouse_pos.y,
-                    },
-                },
-            )
-            .unwrap();
+                    })
+                };
+            }
+        } else {
+            let selected_entities = selected(world);
+            for (i, entity) in selected_entities.iter().enumerate() {
+                if i < unsafe { DRAG.offsets.len() } {
+                    let new_pos = Position {
+                        x: mouse_pos.x + unsafe { DRAG.offsets[i].x },
+                        y: mouse_pos.y + unsafe { DRAG.offsets[i].y },
+                    };
+                    let snapped = snap_to_grid(new_pos);
+
+                    let mut rect = world.get::<&mut Rect>(*entity).unwrap();
+                    rect.x = snapped.x;
+                    rect.y = snapped.y;
+
+                    let input_count = world.get::<&InputPoints>(*entity).unwrap().0.len();
+                    let mut new_points = Vec::new();
+                    for j in 0..input_count {
+                        new_points.push(Position {
+                            x: snapped.x,
+                            y: snapped.y + GRID_SIZE + GRID_SIZE * j as f32,
+                        });
+                    }
+                    *world.get::<&mut InputPoints>(*entity).unwrap() = InputPoints(new_points);
+                }
+            }
+        }
+    } else if unsafe { DRAG.clicked } {
+        unsafe {
+            DRAG.clicked = false;
+            DRAG.offsets.clear();
+        }
     }
 }
 
-fn update_move(world: &mut World) {
-    let mouse_pos = input::mouse_pos_camera();
-
-    for (entity, moving) in world.query::<(Entity, &Moving)>().iter() {
-        let new_x = mouse_pos.x + moving.offset.x;
-        let new_y = mouse_pos.y + moving.offset.y;
-
-        let snapped = snap_to_grid(Position { x: new_x, y: new_y });
-
-        let mut rect = world.get::<&mut Rect>(entity).unwrap();
-        rect.x = snapped.x;
-        rect.y = snapped.y;
-
-        let input_count = moving.original_points.len();
-        let mut new_points = Vec::new();
-        for i in 0..input_count {
-            new_points.push(Position {
-                x: snapped.x,
-                y: snapped.y + GRID_SIZE + GRID_SIZE * i as f32,
-            });
-        }
-        *world.get::<&mut InputPoints>(entity).unwrap() = InputPoints(new_points);
+fn select_rect(world: &mut World) {
+    struct DragState {
+        clicked: bool,
+        start: Position,
     }
+    static mut DRAG: DragState = DragState {
+        clicked: false,
+        start: Position { x: 0.0, y: 0.0 },
+    };
 
-    // Commit move
     if input::mouse_pressed(MouseButton::Left) {
-        let entities: Vec<Entity> = world.query::<Entity>().with::<&Moving>().iter().collect();
+        let current_pos = input::mouse_pos_camera();
 
-        for entity in entities {
-            world.remove_one::<Moving>(entity).unwrap();
-            world.insert_one(entity, Placed).unwrap();
+        if unsafe { !DRAG.clicked } {
+            unsafe {
+                DRAG.start = current_pos;
+                DRAG.clicked = true;
+            }
+            world.spawn((SelectRect {
+                rect: Rect {
+                    x: current_pos.x,
+                    y: current_pos.y,
+                    w: 0.0,
+                    h: 0.0,
+                },
+            },));
+        } else {
+            let start = unsafe { DRAG.start };
+            let mut select_rect = world
+                .query_mut::<&mut SelectRect>()
+                .into_iter()
+                .next()
+                .unwrap();
+
+            select_rect.rect = Rect {
+                x: start.x.min(current_pos.x),
+                y: start.y.min(current_pos.y),
+                w: (current_pos.x - start.x).abs(),
+                h: (current_pos.y - start.y).abs(),
+            };
         }
-    }
+    } else if unsafe { DRAG.clicked } {
+        unsafe { DRAG.clicked = false };
 
-    // Cancel move
-    if input::key_pressed(Key::Escape) || input::mouse_pressed(MouseButton::Right) {
-        let entities: Vec<(Entity, Moving)> = world
-            .query::<(Entity, &Moving)>()
+        let select_rect_entity = world
+            .query::<Entity>()
+            .with::<&SelectRect>()
             .iter()
-            .map(|(entity, moving)| (entity, moving.clone()))
-            .collect();
+            .next()
+            .unwrap();
+        let select_rect = *world.get::<&SelectRect>(select_rect_entity).unwrap();
 
-        for (entity, moving) in entities {
-            *world.get::<&mut Rect>(entity).unwrap() = moving.original_rect;
-            *world.get::<&mut InputPoints>(entity).unwrap() = InputPoints(moving.original_points);
-            world.remove_one::<Moving>(entity).unwrap();
-            world.insert_one(entity, Placed).unwrap();
+        let mut to_select = Vec::new();
+        for (entity, rect) in world.query::<(Entity, &Rect)>().without::<&Ui>().iter() {
+            if select_rect.rect.contains_rect(rect) {
+                to_select.push(entity);
+            }
         }
+
+        for entity in to_select {
+            world.insert_one(entity, Selected).unwrap();
+        }
+
+        world.despawn(select_rect_entity);
     }
+}
+
+#[inline]
+fn selected(world: &World) -> Vec<Entity> {
+    world.query::<Entity>().with::<&Selected>().iter().collect()
 }
 
 pub fn select_gate(world: &mut World) {
     if input::key_pressed(Key::Escape) || input::mouse_pressed(MouseButton::Right) {
-        let selected: Vec<Entity> = world.query::<Entity>().with::<&Selected>().iter().collect();
-
-        for entity in selected {
+        for entity in selected(world) {
             world.remove_one::<Selected>(entity).unwrap();
         }
     } else if (input::key_pressed(Key::X) && input::key_pressed(Key::Control))
         || input::key_pressed(Key::Delete)
     {
-        let selected: Vec<Entity> = world.query::<Entity>().with::<&Selected>().iter().collect();
-
-        for entity in selected {
+        for entity in selected(world) {
             world.despawn(entity);
         }
-    } else if input::key_pressed(Key::M) {
-        move_gates(world);
     }
 
-    update_move(world);
+    static mut MOVE: bool = false;
+    static mut CLICKED: bool = false;
+    if input::mouse_pressed(MouseButton::Left) {
+        if unsafe { !CLICKED } {
+            unsafe { CLICKED = true };
 
-    if !input::mouse_pressed(MouseButton::Left) {
-        return;
-    }
+            let pos = input::mouse_pos_camera();
 
-    let pos = input::mouse_pos_camera();
+            let mut clicked_entities = Vec::new();
+            for (entity, rect) in world.query::<(Entity, &Rect)>().without::<&Ui>().iter() {
+                if rect.contains(pos.x, pos.y) {
+                    clicked_entities.push(entity);
+                }
+            }
 
-    let mut to_select = Vec::new();
-    for (entity, rect) in world
-        .query::<(Entity, &Rect)>()
-        .with::<(&Placed, &GateType)>()
-        .without::<(&Selected)>()
-        .iter()
-    {
-        if rect.contains(pos.x, pos.y) {
-            to_select.push(entity);
+            if !clicked_entities.is_empty() {
+                unsafe { MOVE = true };
+
+                for entity in clicked_entities {
+                    if world.get::<&Selected>(entity).is_err() {
+                        world.insert_one(entity, Selected).unwrap();
+                    }
+                }
+            } else {
+                unsafe { MOVE = false };
+            }
         }
+    } else {
+        unsafe { CLICKED = false };
     }
 
-    for entity in to_select {
-        world.insert_one(entity, Selected).unwrap();
+    if unsafe { MOVE } {
+        move_gates(world);
+    } else {
+        select_rect(world);
     }
 }
 
 pub fn render(sdl: &mut Sdl, world: &mut World) {
+    for (entity, select_rect) in world.query::<(Entity, &SelectRect)>().iter() {
+        sdl.render.color(&Color::GREEN);
+        sdl.render.rect_line(&select_rect.rect);
+    }
+
     for (entity, rect, gate_type, input_points, text) in world
         .query::<(Entity, &Rect, &GateType, &InputPoints, &Text)>()
         .iter()

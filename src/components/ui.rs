@@ -27,3 +27,8 @@ pub enum Tool {
     Place,
     Select,
 }
+
+#[derive(Clone, Copy)]
+pub struct SelectRect {
+    pub rect: Rect,
+}

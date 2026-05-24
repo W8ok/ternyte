@@ -44,7 +44,7 @@ impl Sdl {
                 &mut window,
                 &mut renderer,
             );
-            SDL_SetRenderVSync(renderer, -1);
+            SDL_SetRenderVSync(renderer, /*-1*/ 0);
         }
 
         let mut camera = Box::new(Camera::new(0., 0., 1.));

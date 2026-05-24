@@ -1,6 +1,7 @@
 use hecs::*;
 
 use crate::components::base::*;
+use crate::input;
 use crate::input::*;
 use crate::scene;
 use crate::sdl::{Sdl, event::*, types::*};
@@ -20,6 +21,7 @@ pub fn handle(sdl: &mut Sdl, world: &mut World) -> bool {
                 let (x, y) = sdl.camera.screen_to_world(x, y);
                 MOUSE_X_CAM.with(|mx| *mx.borrow_mut() = x);
                 MOUSE_Y_CAM.with(|my| *my.borrow_mut() = y);
+                input::update_mouse_delta();
             }
             Event::MouseButtonDown { x, y, button } => {
                 MOUSE_BUTTONS.with(|b| {

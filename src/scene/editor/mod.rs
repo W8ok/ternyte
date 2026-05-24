@@ -58,38 +58,13 @@ pub fn new(sdl: &mut Sdl, world: &mut World) {
     ));
 }
 
-fn get_tool(world: &mut World) -> Tool {
-    let tool = world
-        .query::<Entity>()
-        .with::<(&Tool, &Resource)>()
-        .iter()
-        .next()
-        .unwrap();
-
-    if input::key_pressed(Key::Num1) {
-        *world.get::<&mut Tool>(tool).unwrap() = Tool::Place;
-    } else if input::key_pressed(Key::Num2) {
-        *world.get::<&mut Tool>(tool).unwrap() = Tool::Select;
-    }
-
-    return *world.get::<&Tool>(tool).unwrap();
-}
-
 pub fn placement(world: &mut World) {
-    let current_tool = get_tool(world);
-
-    match current_tool {
-        Tool::Place => {
-            gates::place_gate(world);
-        }
-        Tool::Select => {
-            gates::select_gate(world);
-        }
-        _ => {}
-    }
+    gates::place_gate(world);
+    gates::select_gate(world);
 }
 
 fn camera_movement(camera: &mut Camera) {
+    // Perhaps i should remove the keyboard movement...
     let speed = if input::key_pressed(Key::Shift) {
         20.0
     } else {
