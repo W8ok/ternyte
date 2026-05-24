@@ -1,4 +1,5 @@
 #![allow(dead_code, unused)]
+#![windows_subsystem = "windows"]
 use hecs::*;
 
 mod components;
