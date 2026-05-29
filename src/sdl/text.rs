@@ -22,6 +22,17 @@ impl Text {
         }
     }
 
+    pub fn load_from_bytes(&mut self, bytes: &[u8]) {
+        unsafe {
+            let iostream = SDL_IOFromConstMem(bytes.as_ptr() as *const _, bytes.len());
+            self.font = TTF_OpenFontIO(iostream, true, 24.0);
+
+            if self.font.is_null() {
+                println!("Failed to load font from memory!")
+            }
+        }
+    }
+
     pub fn load(&mut self, path: &str) {
         unsafe {
             let path = CString::new(path).unwrap();
@@ -48,6 +59,9 @@ impl Text {
 
     // Future me... just dont... dont touch it...
     // Could optimize by making it generate the texture once... but no :)
+    // Actually... this seem to be the biggest performance bottleneck i have...
+    // So defo... future me... fix this because current me sure wont :)
+    // TODO Optimize this
     pub fn render(&mut self, text: &str, x: f32, y: f32) {
         unsafe {
             let text = CString::new(text).unwrap();

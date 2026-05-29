@@ -10,7 +10,6 @@ use crate::{
 use hecs::*;
 
 mod gates;
-pub const GRID_SIZE: f32 = 16.0;
 
 pub fn new(sdl: &mut Sdl, world: &mut World) {
     let (width, height) = sdl.get_window_size();
@@ -177,6 +176,8 @@ pub fn click(world: &mut World) {
         }
     }
 }
+
+pub const GRID_SIZE: f32 = 16.0;
 
 fn grid(sdl: &mut Sdl) {
     sdl.render.color(&Color::DARKGRAY);

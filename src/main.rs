@@ -45,8 +45,10 @@ mod debug {
 }
 
 fn main() {
-    let mut sdl = Sdl::new("goob", 1280, 720);
-    sdl.text.load("assets/font.ttf");
+    let mut sdl = Sdl::new("Ternyte v0.0.1", 1280, 720);
+
+    const FONT_BYTES: &[u8] = include_bytes!("../assets/font.ttf");
+    sdl.text.load_from_bytes(FONT_BYTES);
 
     let mut world = World::new();
     world.spawn((SceneSelect::Editor, Resource));

@@ -40,11 +40,13 @@ impl Sdl {
                 name.as_ptr(),
                 size_x,
                 size_y,
-                SDL_WINDOW_RESIZABLE,
+                SDL_WindowFlags(0),
+                //SDL_WINDOW_RESIZABLE,
                 &mut window,
                 &mut renderer,
             );
-            SDL_SetRenderVSync(renderer, /*-1*/ 0);
+            SDL_SetRenderVSync(renderer, 0);
+            //SDL_SetRenderVSync(renderer, -1);
         }
 
         let mut camera = Box::new(Camera::new(0., 0., 1.));
@@ -80,8 +82,7 @@ impl Sdl {
     }
 
     pub fn get_window_size(&self) -> (i32, i32) {
-        let mut w = 0;
-        let mut h = 0;
+        let (mut w, mut h) = (0, 0);
         unsafe {
             SDL_GetWindowSize(self.window, &mut w, &mut h);
         }
