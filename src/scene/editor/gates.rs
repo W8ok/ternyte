@@ -225,28 +225,46 @@ pub fn select_gate(world: &mut World) {
 
     static mut MOVE: bool = false;
     static mut CLICKED: bool = false;
+
     if input::mouse_pressed(MouseButton::Left) {
         if unsafe { !CLICKED } {
             unsafe { CLICKED = true };
 
             let pos = input::mouse_pos_camera();
 
-            let mut clicked_entities = Vec::new();
-            for (entity, rect) in world.query::<(Entity, &Rect)>().without::<&Ui>().iter() {
-                if rect.contains(pos.x, pos.y) {
-                    clicked_entities.push(entity);
-                }
-            }
+            let clicked_entity = world
+                .query::<(Entity, &Rect)>()
+                .without::<&Ui>()
+                .iter()
+                .find(|(_, rect)| rect.contains(pos.x, pos.y))
+                .map(|(entity, _)| entity);
 
-            if !clicked_entities.is_empty() {
-                unsafe { MOVE = true };
-
-                for entity in clicked_entities {
-                    if world.get::<&Selected>(entity).is_err() {
+            if let Some(entity) = clicked_entity {
+                // Check if Shift is held for multi-select
+                if input::key_pressed(Key::Shift) {
+                    // Toggle selection
+                    if world.get::<&Selected>(entity).is_ok() {
+                        world.remove_one::<Selected>(entity).unwrap();
+                    } else {
                         world.insert_one(entity, Selected).unwrap();
                     }
+                    unsafe { MOVE = false }; // Don't start move on toggle
+                } else {
+                    // Normal selection - if not already selected, clear others and select this one
+                    if world.get::<&Selected>(entity).is_err() {
+                        for e in selected(world) {
+                            world.remove_one::<Selected>(e).unwrap();
+                        }
+                        world.insert_one(entity, Selected).unwrap();
+                    }
+                    // Start move regardless of whether it was already selected or not
+                    unsafe { MOVE = true };
                 }
             } else {
+                // Clicked on empty space, clear selection and don't move
+                for entity in selected(world) {
+                    world.remove_one::<Selected>(entity).unwrap();
+                }
                 unsafe { MOVE = false };
             }
         }

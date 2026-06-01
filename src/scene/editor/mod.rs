@@ -64,6 +64,7 @@ pub fn placement(world: &mut World) {
 
 fn camera_movement(camera: &mut Camera) {
     // Perhaps i should remove the keyboard movement...
+    // Mostly so i dont have to care about delta time based movement :)
     let speed = if input::key_pressed(Key::Shift) {
         20.0
     } else {
