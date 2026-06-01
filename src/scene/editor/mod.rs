@@ -10,6 +10,8 @@ use crate::{
 use hecs::*;
 
 mod gates;
+mod helpers;
+mod select;
 
 pub fn new(sdl: &mut Sdl, world: &mut World) {
     let (width, height) = sdl.get_window_size();
@@ -59,7 +61,7 @@ pub fn new(sdl: &mut Sdl, world: &mut World) {
 
 pub fn placement(world: &mut World) {
     gates::place_gate(world);
-    gates::select_gate(world);
+    select::select_entities(world);
 }
 
 fn camera_movement(camera: &mut Camera) {
@@ -213,6 +215,7 @@ pub fn render(sdl: &mut Sdl, world: &mut World) {
     {
         grid(sdl);
         gates::render(sdl, world);
+        select::render(sdl, world);
     }
     sdl.camera.end();
 
