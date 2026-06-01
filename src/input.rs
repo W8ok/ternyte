@@ -4,7 +4,9 @@ use std::cell::RefCell;
 
 thread_local! {
     pub static KEYS: RefCell<Vec<Key>> = const { RefCell::new(Vec::new()) };
+    pub static KEYS_PRESSED: RefCell<Vec<Key>> = const { RefCell::new(Vec::new()) };
     pub static MOUSE_BUTTONS: RefCell<Vec<MouseButton>> = const { RefCell::new(Vec::new()) };
+    pub static MOUSE_BUTTONS_PRESSED: RefCell<Vec<MouseButton>> = const { RefCell::new(Vec::new()) };
     pub static MOUSE_X: RefCell<f32> = const { RefCell::new(0.0) };
     pub static MOUSE_Y: RefCell<f32> = const { RefCell::new(0.0) };
     pub static MOUSE_X_CAM: RefCell<f32> = const { RefCell::new(0.0) };
@@ -14,10 +16,18 @@ thread_local! {
 }
 
 pub fn key_pressed(key: Key) -> bool {
+    KEYS_PRESSED.with(|k| k.borrow().contains(&key))
+}
+
+pub fn key_down(key: Key) -> bool {
     KEYS.with(|k| k.borrow().contains(&key))
 }
 
 pub fn mouse_pressed(button: MouseButton) -> bool {
+    MOUSE_BUTTONS_PRESSED.with(|b| b.borrow().contains(&button))
+}
+
+pub fn mouse_down(button: MouseButton) -> bool {
     MOUSE_BUTTONS.with(|b| b.borrow().contains(&button))
 }
 
@@ -51,5 +61,10 @@ pub fn update_mouse_delta() {
 
     LAST_MOUSE_X.with(|last| *last.borrow_mut() = current_x);
     LAST_MOUSE_Y.with(|last| *last.borrow_mut() = current_y);
+}
+
+pub fn clear_pressed() {
+    KEYS_PRESSED.with(|k| k.borrow_mut().clear());
+    MOUSE_BUTTONS_PRESSED.with(|b| b.borrow_mut().clear());
 }
 

@@ -15,11 +15,11 @@ mod input;
 const FONT_BYTES: &[u8] = include_bytes!("../assets/font.ttf");
 
 fn main() {
-    let mut sdl = Sdl::new("Ternyte v0.0.1", 1280, 720);
+    let mut sdl = Sdl::new("Ternyte v0.0.1", 1920, 1080);
     sdl.text.load_from_bytes(FONT_BYTES);
 
     let mut world = World::new();
-    world.spawn((SceneSelect::Editor, Resource));
+    world.spawn((SceneSelect::Editor, Tool::Select, Resource));
     scene::builder(&mut sdl, &mut world);
 
     'main: loop {

@@ -87,7 +87,7 @@ impl Event {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum MouseButton {
     Left,
     Middle,
@@ -106,7 +106,7 @@ impl From<u8> for MouseButton {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum Key {
     Delete,
     Backspace,

@@ -11,7 +11,9 @@ use hecs::*;
 
 mod gates;
 mod helpers;
+use helpers::*;
 mod select;
+mod wires;
 
 pub fn new(sdl: &mut Sdl, world: &mut World) {
     let (width, height) = sdl.get_window_size();
@@ -47,6 +49,36 @@ pub fn new(sdl: &mut Sdl, world: &mut World) {
         Button,
         Rect {
             x: 20.,
+            y: height as f32 - 2. * 95.,
+            w: 200.,
+            h: 75.,
+        },
+        ButtonAction::Wire,
+        Color::DARKGRAY,
+        Text("Wire"),
+        Editor,
+        Ui,
+    ));
+
+    world.spawn((
+        Button,
+        Rect {
+            x: 20.,
+            y: height as f32 - 3. * 95.,
+            w: 200.,
+            h: 75.,
+        },
+        ButtonAction::Select,
+        Color::DARKGRAY,
+        Text("Select"),
+        Editor,
+        Ui,
+    ));
+
+    world.spawn((
+        Button,
+        Rect {
+            x: 20.,
             y: height as f32 - 95.,
             w: 200.,
             h: 75.,
@@ -61,34 +93,15 @@ pub fn new(sdl: &mut Sdl, world: &mut World) {
 
 pub fn placement(world: &mut World) {
     gates::place_gate(world);
+    wires::add_wire(world);
+    wires::place_wire(world);
     select::select_entities(world);
 }
 
 fn camera_movement(camera: &mut Camera) {
-    // Perhaps i should remove the keyboard movement...
-    // Mostly so i dont have to care about delta time based movement :)
-    let speed = if input::key_pressed(Key::Shift) {
-        20.0
-    } else {
-        10.0
-    };
-
-    if input::key_pressed(Key::W) {
-        camera.y -= speed / camera.zoom;
-    }
-    if input::key_pressed(Key::S) {
-        camera.y += speed / camera.zoom;
-    }
-    if input::key_pressed(Key::A) {
-        camera.x -= speed / camera.zoom;
-    }
-    if input::key_pressed(Key::D) {
-        camera.x += speed / camera.zoom;
-    }
-
     static mut LAST_POS: (f32, f32) = (0.0, 0.0);
 
-    if input::mouse_pressed(MouseButton::Middle) {
+    if input::mouse_down(MouseButton::Middle) {
         let pos = input::mouse_pos();
         unsafe {
             camera.x -= (pos.x - LAST_POS.0) / camera.zoom;
@@ -119,6 +132,8 @@ pub fn interact(sdl: &mut Sdl, world: &mut World) -> bool {
 
         match action {
             ButtonAction::Exit => return false,
+            ButtonAction::Wire => change_tool(world, Tool::Wire),
+            ButtonAction::Select => change_tool(world, Tool::Select),
             ButtonAction::AddGateAND => gates::add_gate(GateType::AND, 2, Text("AND"), world),
             ButtonAction::AddGateOR => gates::add_gate(GateType::OR, 2, Text("OR"), world),
             ButtonAction::AddGateXOR => gates::add_gate(GateType::XOR, 2, Text("XOR"), world),
@@ -215,6 +230,7 @@ pub fn render(sdl: &mut Sdl, world: &mut World) {
     {
         grid(sdl);
         gates::render(sdl, world);
+        wires::render(sdl, world);
         select::render(sdl, world);
     }
     sdl.camera.end();

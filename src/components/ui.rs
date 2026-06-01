@@ -11,6 +11,8 @@ pub struct Interacted;
 #[derive(Clone, Copy)]
 pub enum ButtonAction {
     Exit,
+    Wire,
+    Select,
     AddGateAND,
     AddGateOR,
     AddGateXOR,
@@ -21,10 +23,10 @@ pub enum ButtonAction {
     AddGateBUF,
 }
 
-#[derive(Clone, Copy)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum Tool {
     None,
-    Place,
+    Wire,
     Select,
 }
 

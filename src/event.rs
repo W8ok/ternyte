@@ -7,6 +7,7 @@ use crate::scene;
 use crate::sdl::{Sdl, event::*, types::*};
 
 pub fn handle(sdl: &mut Sdl, world: &mut World) -> bool {
+    input::clear_pressed();
     let events = sdl.event.poll();
     for event in events {
         match event {
@@ -29,6 +30,11 @@ pub fn handle(sdl: &mut Sdl, world: &mut World) -> bool {
                         b.borrow_mut().push(button);
                     }
                 });
+                MOUSE_BUTTONS_PRESSED.with(|b| {
+                    if !b.borrow().contains(&button) {
+                        b.borrow_mut().push(button);
+                    }
+                });
             }
             Event::MouseButtonUp { x, y, button } => {
                 MOUSE_BUTTONS.with(|b| {
@@ -41,6 +47,11 @@ pub fn handle(sdl: &mut Sdl, world: &mut World) -> bool {
             }
             Event::KeyDown { key } => {
                 KEYS.with(|k| {
+                    if !k.borrow().contains(&key) {
+                        k.borrow_mut().push(key);
+                    }
+                });
+                KEYS_PRESSED.with(|k| {
                     if !k.borrow().contains(&key) {
                         k.borrow_mut().push(key);
                     }

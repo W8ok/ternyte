@@ -26,7 +26,7 @@ fn move_entities(world: &mut World) {
 
     let mouse_pos = input::mouse_pos_camera();
 
-    if input::mouse_pressed(MouseButton::Left) {
+    if input::mouse_down(MouseButton::Left) {
         if unsafe { !DRAG.clicked } {
             unsafe {
                 DRAG.clicked = true;
@@ -85,7 +85,7 @@ fn select_rect(world: &mut World) {
         start: Position { x: 0.0, y: 0.0 },
     };
 
-    if input::mouse_pressed(MouseButton::Left) {
+    if input::mouse_down(MouseButton::Left) {
         let current_pos = input::mouse_pos_camera();
 
         if unsafe { !DRAG.clicked } {
@@ -152,7 +152,7 @@ fn deselect_rect(world: &mut World) {
         start: Position { x: 0.0, y: 0.0 },
     };
 
-    if input::mouse_pressed(MouseButton::Right) {
+    if input::mouse_down(MouseButton::Right) {
         let current_pos = input::mouse_pos_camera();
 
         if unsafe { !DRAG.clicked } {
@@ -212,10 +212,19 @@ fn deselect_rect(world: &mut World) {
 }
 
 pub fn select_entities(world: &mut World) {
+    let mut tool = world
+        .query_mut::<&mut Tool>()
+        .with::<&Resource>()
+        .into_iter()
+        .next()
+        .unwrap();
+    if *tool != Tool::Select {
+        return;
+    }
+
     if input::mouse_pressed(MouseButton::Right) {
         let pos = input::mouse_pos_camera();
 
-        // Find entity under cursor
         let clicked_entity = world
             .query::<(Entity, &Rect)>()
             .without::<&Ui>()
@@ -231,11 +240,7 @@ pub fn select_entities(world: &mut World) {
         }
     }
 
-    if input::key_pressed(Key::Escape) {
-        for entity in selected(world) {
-            world.remove_one::<Selected>(entity).unwrap();
-        }
-    } else if (input::key_pressed(Key::X) && input::key_pressed(Key::Control))
+    if (input::key_pressed(Key::X) && input::key_pressed(Key::Control))
         || input::key_pressed(Key::Delete)
     {
         for entity in selected(world) {
