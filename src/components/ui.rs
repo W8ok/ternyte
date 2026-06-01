@@ -32,3 +32,8 @@ pub enum Tool {
 pub struct SelectRect {
     pub rect: Rect,
 }
+
+#[derive(Clone, Copy)]
+pub struct DeselectRect {
+    pub rect: Rect,
+}

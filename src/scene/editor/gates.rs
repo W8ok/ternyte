@@ -205,13 +205,100 @@ fn select_rect(world: &mut World) {
     }
 }
 
+fn deselect_rect(world: &mut World) {
+    struct DragState {
+        clicked: bool,
+        start: Position,
+    }
+    static mut DRAG: DragState = DragState {
+        clicked: false,
+        start: Position { x: 0.0, y: 0.0 },
+    };
+
+    if input::mouse_pressed(MouseButton::Right) {
+        let current_pos = input::mouse_pos_camera();
+
+        if unsafe { !DRAG.clicked } {
+            unsafe {
+                DRAG.start = current_pos;
+                DRAG.clicked = true;
+            }
+            world.spawn((DeselectRect {
+                rect: Rect {
+                    x: current_pos.x,
+                    y: current_pos.y,
+                    w: 0.0,
+                    h: 0.0,
+                },
+            },));
+        } else {
+            let start = unsafe { DRAG.start };
+            let mut deselect_rect = world
+                .query_mut::<&mut DeselectRect>()
+                .into_iter()
+                .next()
+                .unwrap();
+
+            deselect_rect.rect = Rect {
+                x: start.x.min(current_pos.x),
+                y: start.y.min(current_pos.y),
+                w: (current_pos.x - start.x).abs(),
+                h: (current_pos.y - start.y).abs(),
+            };
+        }
+    } else if unsafe { DRAG.clicked } {
+        unsafe { DRAG.clicked = false };
+
+        let deselect_rect_entity = world
+            .query::<Entity>()
+            .with::<&DeselectRect>()
+            .iter()
+            .next()
+            .unwrap();
+        let deselect_rect = *world.get::<&DeselectRect>(deselect_rect_entity).unwrap();
+
+        let mut to_deselect = Vec::new();
+        for (entity, rect) in world.query::<(Entity, &Rect)>().without::<&Ui>().iter() {
+            if deselect_rect.rect.contains_rect(rect) {
+                to_deselect.push(entity);
+            }
+        }
+
+        for entity in to_deselect {
+            if world.get::<&Selected>(entity).is_ok() {
+                world.remove_one::<Selected>(entity).unwrap();
+            }
+        }
+
+        world.despawn(deselect_rect_entity);
+    }
+}
 #[inline]
 fn selected(world: &World) -> Vec<Entity> {
     world.query::<Entity>().with::<&Selected>().iter().collect()
 }
 
 pub fn select_gate(world: &mut World) {
-    if input::key_pressed(Key::Escape) || input::mouse_pressed(MouseButton::Right) {
+    if input::mouse_pressed(MouseButton::Right) {
+        let pos = input::mouse_pos_camera();
+
+        // Find entity under cursor
+        let clicked_entity = world
+            .query::<(Entity, &Rect)>()
+            .without::<&Ui>()
+            .iter()
+            .find(|(_, rect)| rect.contains(pos.x, pos.y))
+            .map(|(entity, _)| entity);
+
+        if let Some(entity) = clicked_entity
+            && world.get::<&Selected>(entity).is_ok()
+        {
+            world.remove_one::<Selected>(entity).unwrap();
+            return;
+        }
+    }
+
+    if input::key_pressed(Key::Escape) {
         for entity in selected(world) {
             world.remove_one::<Selected>(entity).unwrap();
         }
@@ -252,8 +339,8 @@ pub fn select_gate(world: &mut World) {
                 } else {
                     // Normal selection - if not already selected, clear others and select this one
                     if world.get::<&Selected>(entity).is_err() {
-                        for e in selected(world) {
-                            world.remove_one::<Selected>(e).unwrap();
+                        for entity in selected(world) {
+                            world.remove_one::<Selected>(entity).unwrap();
                         }
                         world.insert_one(entity, Selected).unwrap();
                     }
@@ -276,6 +363,7 @@ pub fn select_gate(world: &mut World) {
         move_gates(world);
     } else {
         select_rect(world);
+        deselect_rect(world);
     }
 }
 
@@ -283,6 +371,11 @@ pub fn render(sdl: &mut Sdl, world: &mut World) {
     for (entity, select_rect) in world.query::<(Entity, &SelectRect)>().iter() {
         sdl.render.color(&Color::GREEN);
         sdl.render.rect_line(&select_rect.rect);
+    }
+
+    for (entity, deselect_rect) in world.query::<(Entity, &DeselectRect)>().iter() {
+        sdl.render.color(&Color::RED);
+        sdl.render.rect_line(&deselect_rect.rect);
     }
 
     for (entity, rect, gate_type, input_points, text) in world
