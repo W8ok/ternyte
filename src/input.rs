@@ -1,70 +1,85 @@
-use crate::components::base::*;
-use crate::sdl::event::{Key, MouseButton};
-use std::cell::RefCell;
+use crate::components::*;
+use glam::Vec2;
+use raylib_sys::*;
 
-thread_local! {
-    pub static KEYS: RefCell<Vec<Key>> = const { RefCell::new(Vec::new()) };
-    pub static KEYS_PRESSED: RefCell<Vec<Key>> = const { RefCell::new(Vec::new()) };
-    pub static MOUSE_BUTTONS: RefCell<Vec<MouseButton>> = const { RefCell::new(Vec::new()) };
-    pub static MOUSE_BUTTONS_PRESSED: RefCell<Vec<MouseButton>> = const { RefCell::new(Vec::new()) };
-    pub static MOUSE_X: RefCell<f32> = const { RefCell::new(0.0) };
-    pub static MOUSE_Y: RefCell<f32> = const { RefCell::new(0.0) };
-    pub static MOUSE_X_CAM: RefCell<f32> = const { RefCell::new(0.0) };
-    pub static MOUSE_Y_CAM: RefCell<f32> = const { RefCell::new(0.0) };
-    pub static LAST_MOUSE_X: RefCell<f32> = const { RefCell::new(0.0) };
-    pub static LAST_MOUSE_Y: RefCell<f32> = const { RefCell::new(0.0) };
+// ========================================================
+// KEYBOARD
+// ========================================================
+pub use raylib_sys::KeyboardKey as Key;
+
+pub fn is_key_pressed(key: Key) -> bool {
+    unsafe { IsKeyPressed(key as i32) }
 }
 
-pub fn key_pressed(key: Key) -> bool {
-    KEYS_PRESSED.with(|k| k.borrow().contains(&key))
+pub fn is_key_released(key: Key) -> bool {
+    unsafe { IsKeyReleased(key as i32) }
 }
 
-pub fn key_down(key: Key) -> bool {
-    KEYS.with(|k| k.borrow().contains(&key))
+pub fn is_key_down(key: Key) -> bool {
+    unsafe { IsKeyDown(key as i32) }
 }
 
-pub fn mouse_pressed(button: MouseButton) -> bool {
-    MOUSE_BUTTONS_PRESSED.with(|b| b.borrow().contains(&button))
+pub fn is_key_up(key: Key) -> bool {
+    unsafe { IsKeyUp(key as i32) }
 }
 
-pub fn mouse_down(button: MouseButton) -> bool {
-    MOUSE_BUTTONS.with(|b| b.borrow().contains(&button))
+// ========================================================
+// MOUSE
+// ========================================================
+pub use raylib_sys::MouseButton as Mouse;
+
+pub fn get_mouse_coord() -> Coordinate {
+    unsafe { Coordinate::new(GetMouseX(), GetMouseY()) }
 }
 
-pub fn mouse_pos() -> Position {
-    let x = MOUSE_X.with(|x| *x.borrow());
-    let y = MOUSE_Y.with(|y| *y.borrow());
-    Position { x, y }
+pub fn get_mouse_pos() -> Vec2 {
+    let pos = unsafe { GetMousePosition() };
+    Vec2 { x: pos.x, y: pos.y }
 }
 
-pub fn mouse_pos_camera() -> Position {
-    let x = MOUSE_X_CAM.with(|x| *x.borrow());
-    let y = MOUSE_Y_CAM.with(|y| *y.borrow());
-    Position { x, y }
+pub fn is_mouse_pressed(button: Mouse) -> bool {
+    unsafe { IsMouseButtonPressed(button as i32) }
 }
 
-pub fn mouse_delta() -> Position {
-    let current_x = MOUSE_X.with(|x| *x.borrow());
-    let current_y = MOUSE_Y.with(|y| *y.borrow());
-    let last_x = LAST_MOUSE_X.with(|x| *x.borrow());
-    let last_y = LAST_MOUSE_Y.with(|y| *y.borrow());
+pub fn is_mouse_released(button: Mouse) -> bool {
+    unsafe { IsMouseButtonReleased(button as i32) }
+}
 
-    Position {
-        x: current_x - last_x,
-        y: current_y - last_y,
+pub fn is_mouse_down(button: Mouse) -> bool {
+    unsafe { IsMouseButtonDown(button as i32) }
+}
+
+pub fn is_mouse_up(button: Mouse) -> bool {
+    unsafe { IsMouseButtonUp(button as i32) }
+}
+
+pub fn get_mouse_wheel_move() -> f32 {
+    unsafe { GetMouseWheelMove() }
+}
+
+pub fn get_mouse_delta() -> Vec2 {
+    let delta = unsafe { GetMouseDelta() };
+    Vec2 {
+        x: delta.x,
+        y: delta.y,
     }
 }
 
-pub fn update_mouse_delta() {
-    let current_x = MOUSE_X.with(|x| *x.borrow());
-    let current_y = MOUSE_Y.with(|y| *y.borrow());
-
-    LAST_MOUSE_X.with(|last| *last.borrow_mut() = current_x);
-    LAST_MOUSE_Y.with(|last| *last.borrow_mut() = current_y);
+// ========================================================
+// WINDOW
+// ========================================================
+pub fn get_screen_size() -> Coordinate {
+    Coordinate {
+        x: unsafe { GetScreenWidth() },
+        y: unsafe { GetScreenHeight() },
+    }
 }
 
-pub fn clear_pressed() {
-    KEYS_PRESSED.with(|k| k.borrow_mut().clear());
-    MOUSE_BUTTONS_PRESSED.with(|b| b.borrow_mut().clear());
+pub fn is_window_resized() -> bool {
+    unsafe { IsWindowResized() }
 }
 
+pub fn screen_to_world(coord: Coordinate, camera: &crate::render::Camera) -> Coordinate {
+    let cam_coord = Coordinate::new(camera.target.x as i32, camera.target.y as i32);
+    coord + cam_coord
+}

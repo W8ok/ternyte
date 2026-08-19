@@ -1,41 +1,19 @@
-#![allow(dead_code, unused)]
-#![windows_subsystem = "windows"]
-use hecs::*;
+#![allow(unused)]
+use rel_core::*;
 
 mod components;
-use components::{base::*, gate::*, ui::*};
-mod scene;
-use scene::*;
-mod sdl;
-use sdl::{Sdl, types::*};
-mod debug;
-mod event;
 mod input;
+mod render;
 
-const FONT_BYTES: &[u8] = include_bytes!("../assets/font.ttf");
+mod raylib;
+use raylib::RaylibPlugin;
+mod ui;
+use ui::UiPlugin;
+mod editor;
+use editor::EditorPlugin;
 
 fn main() {
-    let mut sdl = Sdl::new("Ternyte v0.0.1", 1920, 1080);
-    sdl.text.load_from_bytes(FONT_BYTES);
-
-    let mut world = World::new();
-    world.spawn((SceneSelect::Editor, Tool::Select, Resource));
-    scene::builder(&mut sdl, &mut world);
-
-    'main: loop {
-        if !event::handle(&mut sdl, &mut world) {
-            break 'main;
-        }
-
-        sdl.render.clear(Color::GRAY);
-
-        if !scene::manager(&mut sdl, &mut world) {
-            break 'main;
-        }
-
-        sdl.render.present();
-        debug::tick();
-    }
-
-    sdl.exit();
+    App::new()
+        .add_plugins((RaylibPlugin, UiPlugin, EditorPlugin))
+        .run();
 }
