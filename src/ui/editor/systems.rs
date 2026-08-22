@@ -101,27 +101,56 @@ pub fn editor(app: &mut App) {
 fn draw_gates(ecs: &World) {
     for gate in ecs.query::<&Gate>().iter() {
         let color = match gate.kind {
-            GateKind::AND => Color::RED,
-            GateKind::NAND => Color::ORANGE,
-            GateKind::OR => Color::GREEN,
-            GateKind::NOR => Color::LIME,
-            GateKind::NOT => Color::BLUE,
-            GateKind::BUF => Color::MAGENTA,
-            GateKind::XOR => Color::WHITE,
-            GateKind::XNOR => Color::GRAY,
+            GateKind::AND { .. } => Color::RED,
+            GateKind::NAND { .. } => Color::ORANGE,
+            GateKind::OR { .. } => Color::GREEN,
+            GateKind::NOR { .. } => Color::LIME,
+            GateKind::NOT { .. } => Color::BLUE,
+            GateKind::BUF { .. } => Color::MAGENTA,
+            GateKind::XOR { .. } => Color::WHITE,
+            GateKind::XNOR { .. } => Color::GRAY,
+            GateKind::UNKNOWN => unreachable!("Fuck off"),
         };
 
         draw_rect(&gate.rect, color);
 
+        let radius = (GRID_SIZE / 2) as f32;
+        // I love Rust /s
+        match &gate.kind {
+            GateKind::AND(c)
+            | GateKind::NAND(c)
+            | GateKind::OR(c)
+            | GateKind::NOR(c)
+            | GateKind::XOR(c)
+            | GateKind::XNOR(c) => {
+                for input in c.inputs.iter() {
+                    draw_circle(input, radius, Color::BLACK);
+                }
+                for output in c.outputs.iter() {
+                    draw_circle(output, radius, Color::BLACK);
+                }
+            }
+            GateKind::NOT(c) | GateKind::BUF(c) => {
+                for input in c.inputs.iter() {
+                    draw_circle(input, radius, Color::BLACK);
+                }
+                for output in c.outputs.iter() {
+                    draw_circle(output, radius, Color::BLACK);
+                }
+            }
+            _ => {}
+        }
+
         let text = match gate.kind {
-            GateKind::AND => "AND",
-            GateKind::NAND => "NAND",
-            GateKind::OR => "OR",
-            GateKind::NOR => "NOR",
-            GateKind::NOT => "NOT",
-            GateKind::BUF => "BUF",
-            GateKind::XOR => "XOR",
-            GateKind::XNOR => "XNOR",
+            GateKind::AND { .. } => "AND",
+            GateKind::NAND { .. } => "NAND",
+            GateKind::OR { .. } => "OR",
+            GateKind::NOR { .. } => "NOR",
+            GateKind::NOT { .. } => "NOT",
+            GateKind::BUF { .. } => "BUF",
+            GateKind::XOR { .. } => "XOR",
+            GateKind::XNOR { .. } => "XNOR",
+            GateKind::UNKNOWN => unreachable!("Fuck off"),
         };
 
         // TODO
@@ -157,14 +186,14 @@ fn handle_buttons(app: &mut App, window_size: &Coordinate) {
     use crate::editor::components::GateKind;
     for label in pressed_buttons.iter() {
         match *label {
-            "AND" => app.send_event(GateKind::AND),
-            "NAND" => app.send_event(GateKind::NAND),
-            "OR" => app.send_event(GateKind::OR),
-            "NOR" => app.send_event(GateKind::NOR),
-            "NOT" => app.send_event(GateKind::NOT),
-            "BUF" => app.send_event(GateKind::BUF),
-            "XOR" => app.send_event(GateKind::XOR),
-            "XNOR" => app.send_event(GateKind::XNOR),
+            "AND" => app.send_event(GateKind::AND(Default::default())),
+            "NAND" => app.send_event(GateKind::NAND(Default::default())),
+            "OR" => app.send_event(GateKind::OR(Default::default())),
+            "NOR" => app.send_event(GateKind::NOR(Default::default())),
+            "NOT" => app.send_event(GateKind::NOT(Default::default())),
+            "BUF" => app.send_event(GateKind::BUF(Default::default())),
+            "XOR" => app.send_event(GateKind::XOR(Default::default())),
+            "XNOR" => app.send_event(GateKind::XNOR(Default::default())),
             "Menu" => app.set_state(UiState::Menu),
             _ => todo!("Label '{}' not covered", label),
         }

@@ -73,6 +73,10 @@ pub fn draw_rect_lines(rect: &Rect, color: Color) {
     unsafe { DrawRectangleLines(rect.x, rect.y, rect.w, rect.h, color) };
 }
 
+pub fn draw_circle(coord: &Coordinate, radius: f32, color: Color) {
+    unsafe { DrawCircle(coord.x, coord.y, radius, color) };
+}
+
 pub fn draw_text(text: &str, coord: Coordinate, size: i32, color: Color) {
     unsafe {
         DrawText(

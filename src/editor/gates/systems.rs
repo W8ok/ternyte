@@ -17,21 +17,45 @@ pub fn spawn_gate(app: &mut App, kind: &GateKind) {
     // at least for the height
     // for width its whatever
     // also this may break with the addition of rotation
-    let size = {
-        match *kind {
-            GateKind::NOT => Coordinate::new(GRID_SIZE * 3, GRID_SIZE * 2),
-            GateKind::BUF => Coordinate::new(GRID_SIZE * 3, GRID_SIZE * 2),
-            _ => Coordinate::new(GRID_SIZE * 4, GRID_SIZE * 4),
-        }
+
+    let (input_count, output_count) = match kind {
+        GateKind::UNKNOWN => (0, 0),
+        GateKind::AND(c) => (c.inputs.len(), c.outputs.len()),
+        GateKind::NAND(c) => (c.inputs.len(), c.outputs.len()),
+        GateKind::OR(c) => (c.inputs.len(), c.outputs.len()),
+        GateKind::NOR(c) => (c.inputs.len(), c.outputs.len()),
+        GateKind::NOT(c) => (c.inputs.len(), c.outputs.len()),
+        GateKind::BUF(c) => (c.inputs.len(), c.outputs.len()),
+        GateKind::XOR(c) => (c.inputs.len(), c.outputs.len()),
+        GateKind::XNOR(c) => (c.inputs.len(), c.outputs.len()),
     };
 
-    app.spawn_entity((
-        Gate {
-            kind: *kind,
-            rect: Rect::new(coord.x, coord.y, size.x, size.y),
-        },
-        PlacingTag,
-    ));
+    let max_connections = input_count.max(output_count);
+    let height = GRID_SIZE * 2 * max_connections as i32;
+    let width = 6 * GRID_SIZE;
+    let size = Coordinate::new(width, height);
+    let rect = Rect::new(coord.x, coord.y, size.x, size.y);
+
+    let mut kind = *kind;
+    match &mut kind {
+        GateKind::AND(c)
+        | GateKind::NAND(c)
+        | GateKind::OR(c)
+        | GateKind::NOR(c)
+        | GateKind::XOR(c)
+        | GateKind::XNOR(c) => {
+            c.inputs[0] = Coordinate::new(rect.x, rect.y + GRID_SIZE);
+            c.inputs[1] = Coordinate::new(rect.x, rect.y + height - GRID_SIZE);
+            c.outputs[0] = Coordinate::new(rect.x + width, rect.y + height / 2);
+        }
+        GateKind::NOT(c) | GateKind::BUF(c) => {
+            c.inputs[0] = Coordinate::new(rect.x, rect.y + height / 2);
+            c.outputs[0] = Coordinate::new(rect.x + width, rect.y + height / 2);
+        }
+        GateKind::UNKNOWN => {}
+    }
+
+    app.spawn_entity((Gate { kind, rect }, PlacingTag));
 }
 
 pub fn place_gates(app: &mut App) {
@@ -57,6 +81,26 @@ pub fn place_gates(app: &mut App) {
         gate.rect.y = snapped_coord.y;
 
         offset += gate.rect.h + padding;
+
+        match &mut gate.kind {
+            GateKind::AND(c)
+            | GateKind::NAND(c)
+            | GateKind::OR(c)
+            | GateKind::NOR(c)
+            | GateKind::XOR(c)
+            | GateKind::XNOR(c) => {
+                c.inputs[0] = Coordinate::new(gate.rect.x, gate.rect.y + GRID_SIZE);
+                c.inputs[1] = Coordinate::new(gate.rect.x, gate.rect.y + gate.rect.h - GRID_SIZE);
+                c.outputs[0] =
+                    Coordinate::new(gate.rect.x + gate.rect.w, gate.rect.y + gate.rect.h / 2);
+            }
+            GateKind::NOT(c) | GateKind::BUF(c) => {
+                c.inputs[0] = Coordinate::new(gate.rect.x, gate.rect.y + gate.rect.h / 2);
+                c.outputs[0] =
+                    Coordinate::new(gate.rect.x + gate.rect.w, gate.rect.y + gate.rect.h / 2);
+            }
+            GateKind::UNKNOWN => {}
+        }
     }
 
     if is_mouse_pressed(Mouse::MOUSE_BUTTON_LEFT) {
